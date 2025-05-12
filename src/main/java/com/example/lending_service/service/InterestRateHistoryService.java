@@ -9,5 +9,7 @@ import java.util.List;
 public interface InterestRateHistoryService {
     List<InterestRateHistory> getRateHistoryByLoanId(Long loanId);
 
+    BigDecimal getCurrentRateForContract(Long contractId);
+
     void updateInterestRate(Long loanId, BigDecimal newRate, LocalDate startDate, Long employeeId);
 }

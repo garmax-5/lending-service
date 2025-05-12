@@ -7,6 +7,7 @@ import com.example.lending_service.service.PaymentScheduleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -16,10 +17,29 @@ class PaymentScheduleServiceImpl implements PaymentScheduleService {
 
     private final PaymentScheduleRepository paymentScheduleRepository;
 
+//    @Override
+//    public List<PaymentSchedule> getSchedulesByLoanId(Long loanId) {
+//        return paymentScheduleRepository.findByContractContractId(loanId);
+//    }
+
     @Override
-    public List<PaymentSchedule> getSchedulesByLoanId(Long loanId) {
-        return paymentScheduleRepository.findByContractContractId(loanId);
+    public List<PaymentDTO> getScheduleByLoanId(Long loanId) {
+        List<PaymentSchedule> payments = paymentScheduleRepository.findByContractContractId(loanId);
+
+        return payments.stream()
+                .sorted(Comparator.comparing(PaymentSchedule::getPaymentDate)) // ← сортировка по дате
+                .map(p -> new PaymentDTO(
+                        p.getPaymentId(),
+                        p.getPaymentDate(),
+                        p.getPrincipalAmount(),
+                        p.getInterestAmount(),
+                        p.getTotalPayment(),
+                        p.getRateApplied(),
+                        p.isPaid()
+                ))
+                .collect(Collectors.toList());
     }
+
 
     @Override
     public List<PaymentDTO> getPaymentsByLoanIdAndStatus(Long loanId, Boolean isPaid) {

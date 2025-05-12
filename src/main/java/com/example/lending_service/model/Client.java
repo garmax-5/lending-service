@@ -21,4 +21,9 @@ public class Client {
     private String passportNumber;
     private String phone;
     private String email;
+
+    public Client(Long id) {
+        this.clientId = id;
+    }
+
 }

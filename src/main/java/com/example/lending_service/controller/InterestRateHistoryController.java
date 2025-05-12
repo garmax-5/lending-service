@@ -1,21 +1,25 @@
 package com.example.lending_service.controller;
 
+import com.example.lending_service.dto.UpdateRateRequest;
+import com.example.lending_service.model.Employee;
 import com.example.lending_service.model.InterestRateHistory;
+import com.example.lending_service.repository.EmployeeRepository;
 import com.example.lending_service.service.InterestRateHistoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
+import javax.validation.Valid;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/rates")
 @RequiredArgsConstructor
-class InterestRateHistoryController {
+public class InterestRateHistoryController {
 
     private final InterestRateHistoryService interestRateHistoryService;
+    private final EmployeeRepository employeeRepository;
 
     @GetMapping("/loan/{loanId}")
     public ResponseEntity<List<InterestRateHistory>> getRateHistoryByLoan(@PathVariable Long loanId) {
@@ -23,13 +27,22 @@ class InterestRateHistoryController {
     }
 
     @PutMapping("/loan/{loanId}")
-    public ResponseEntity<String> updateRate(
+    public ResponseEntity<String> updateInterestRate(
             @PathVariable Long loanId,
-            @RequestParam BigDecimal newRate,
-            @RequestParam LocalDate startDate,
-            @RequestParam Long employeeId
+            @RequestBody @Valid UpdateRateRequest request,
+            Authentication authentication
     ) {
-        interestRateHistoryService.updateInterestRate(loanId, newRate, startDate, employeeId);
-        return ResponseEntity.ok("The interest rate has been successfully updated and the schedule has been recalculated.");
+        String email = authentication.getName();
+        Employee employee = employeeRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Сотрудник не найден"));
+
+        interestRateHistoryService.updateInterestRate(
+                loanId,
+                request.getNewRate(),
+                request.getStartDate(),
+                employee.getEmployeeId()
+        );
+
+        return ResponseEntity.ok("Ставка успешно обновлена.");
     }
 }

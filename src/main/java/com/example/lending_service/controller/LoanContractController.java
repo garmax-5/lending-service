@@ -1,5 +1,7 @@
 package com.example.lending_service.controller;
 
+import com.example.lending_service.dto.CreateLoanRequest;
+import com.example.lending_service.dto.LoanContractDTO;
 import com.example.lending_service.dto.LoanSummaryDTO;
 import com.example.lending_service.dto.PaymentDTO;
 import com.example.lending_service.model.LoanContract;
@@ -9,7 +11,9 @@ import com.example.lending_service.service.PaymentScheduleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
 
+import javax.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -20,18 +24,24 @@ public class LoanContractController {
     private final LoanContractService loanContractService;
     private final PaymentScheduleService paymentScheduleService;
 
+
     @PostMapping
-    public ResponseEntity<LoanContract> createLoan(@RequestBody LoanContract loanContract) {
-        return ResponseEntity.ok(loanContractService.createLoan(loanContract));
+    public ResponseEntity<LoanContractDTO> createLoan(
+            @RequestBody @Valid CreateLoanRequest request,
+            Authentication authentication
+    ) {
+        String employeeEmail = authentication.getName(); // получаем email из токена
+        LoanContract contract = loanContractService.createLoan(request, employeeEmail);
+        return ResponseEntity.ok(toDTO(contract));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<LoanContract> getLoan(@PathVariable Long id) {
+    public ResponseEntity<LoanContractDTO> getLoan(@PathVariable Long id) {
         return ResponseEntity.ok(loanContractService.getLoan(id));
     }
 
     @GetMapping
-    public ResponseEntity<List<LoanContract>> getAllLoans() {
+    public ResponseEntity<List<LoanContractDTO>> getAllLoans() {
         return ResponseEntity.ok(loanContractService.getAllLoans());
     }
 
@@ -53,4 +63,18 @@ public class LoanContractController {
     ) {
         return ResponseEntity.ok(paymentScheduleService.getPaymentsByLoanIdAndStatus(id, isPaid));
     }
+
+    private LoanContractDTO toDTO(LoanContract contract) {
+        return new LoanContractDTO(
+                contract.getContractId(),
+                contract.getClient().getFullName(),
+                contract.getEmployee().getFullName(),
+                contract.getLoanAmount(),
+                contract.getPaymentType().name(),
+                contract.getStatus(),
+                contract.getStartDate(),
+                contract.getEndDate()
+        );
+    }
+
 }

@@ -1,5 +1,6 @@
 package com.example.lending_service.controller;
 
+import com.example.lending_service.dto.PaymentDTO;
 import com.example.lending_service.model.PaymentSchedule;
 import com.example.lending_service.service.PaymentScheduleService;
 import lombok.RequiredArgsConstructor;
@@ -18,8 +19,13 @@ class PaymentScheduleController {
 
     private final PaymentScheduleService paymentScheduleService;
 
+//    @GetMapping("/loan/{loanId}")
+//    public ResponseEntity<List<PaymentSchedule>> getSchedulesByLoan(@PathVariable Long loanId) {
+//        return ResponseEntity.ok(paymentScheduleService.getSchedulesByLoanId(loanId));
+//    }
+
     @GetMapping("/loan/{loanId}")
-    public ResponseEntity<List<PaymentSchedule>> getSchedulesByLoan(@PathVariable Long loanId) {
-        return ResponseEntity.ok(paymentScheduleService.getSchedulesByLoanId(loanId));
+    public ResponseEntity<List<PaymentDTO>> getScheduleByLoan(@PathVariable Long loanId) {
+        return ResponseEntity.ok(paymentScheduleService.getScheduleByLoanId(loanId));
     }
 }

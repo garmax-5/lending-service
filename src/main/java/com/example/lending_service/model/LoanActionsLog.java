@@ -26,5 +26,13 @@ public class LoanActionsLog {
     private String actionType;
     private LocalDateTime actionTime;
     private String description;
+
+    @PrePersist
+    public void prePersist() {
+        if (actionTime == null) {
+            actionTime = LocalDateTime.now();
+        }
+    }
+
 }
 

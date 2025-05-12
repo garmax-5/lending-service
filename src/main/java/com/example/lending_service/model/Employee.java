@@ -17,10 +17,19 @@ public class Employee {
     private Long employeeId;
 
     private String fullName;
+
     private String email;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @JsonIgnore
+    private String password;
+
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id")
     @JsonIgnore
     private Role role;
+
+    public Employee(Long id) {
+        this.employeeId = id;
+    }
+
 }
