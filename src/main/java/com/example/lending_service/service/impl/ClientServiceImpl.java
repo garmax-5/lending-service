@@ -6,6 +6,7 @@ import com.example.lending_service.model.Client;
 import com.example.lending_service.repository.ClientRepository;
 import com.example.lending_service.service.ClientService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,38 +18,36 @@ public class ClientServiceImpl implements ClientService {
 
     private final ClientRepository clientRepository;
 
-//    @Override
-//    public Client getClientById(Long id) {
-//        return clientRepository.findById(id)
-//                .orElseThrow(() -> new RuntimeException("Client not found"));
-//    }
-//
-//    @Override
-//    public List<Client> getAllClients() {
-//        return clientRepository.findAll();
-//    }
-
     @Override
     public ClientDTO getClientById(Long id) {
-        return toDTO(clientRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Client not found")));
+        Client client = clientRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Client not found"));
+        return toDTO(client);
     }
 
     @Override
     public List<ClientDTO> getAllClients() {
-        return clientRepository.findAll()
+        return clientRepository.findAllByOrderByFullNameAsc()
                 .stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<ClientSearchDTO> searchByFullName(String search) {
-        return clientRepository.findByFullNameContainingIgnoreCase(search).stream()
-                .map(c -> new ClientSearchDTO(c.getClientId(), c.getFullName()))
+    public List<ClientSearchDTO> getAllClientsForSearch() {
+        return clientRepository.findAllByOrderByFullNameAsc()
+                .stream()
+                .map(this::toSearchDTO)
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<ClientSearchDTO> searchByFullName(String search) {
+        return clientRepository.findByFullNameContainingIgnoreCase(search)
+                .stream()
+                .map(this::toSearchDTO)
+                .collect(Collectors.toList());
+    }
 
     private ClientDTO toDTO(Client client) {
         return new ClientDTO(
@@ -57,5 +56,12 @@ public class ClientServiceImpl implements ClientService {
                 client.getPhone()
         );
     }
+
+    private ClientSearchDTO toSearchDTO(Client client) {
+        return new ClientSearchDTO(client.getClientId(), client.getFullName());
+    }
 }
+
+
+
 

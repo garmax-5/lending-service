@@ -1,5 +1,6 @@
 package com.example.lending_service.controller;
 
+import com.example.lending_service.dto.LoanActionLogDTO;
 import com.example.lending_service.model.LoanActionsLog;
 import com.example.lending_service.service.LoanActionsLogService;
 import lombok.RequiredArgsConstructor;
@@ -14,12 +15,13 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/logs")
 @RequiredArgsConstructor
-class LoanActionsLogController {
+public class LoanActionsLogController {
 
     private final LoanActionsLogService loanActionsLogService;
 
     @GetMapping("/loan/{loanId}")
-    public ResponseEntity<List<LoanActionsLog>> getLogsByLoan(@PathVariable Long loanId) {
+    public ResponseEntity<List<LoanActionLogDTO>> getLogsByLoan(@PathVariable Long loanId) {
         return ResponseEntity.ok(loanActionsLogService.getLogsByLoanId(loanId));
     }
 }
+

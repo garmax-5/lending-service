@@ -4,8 +4,6 @@ import com.example.lending_service.dto.CreateLoanRequest;
 import com.example.lending_service.dto.LoanContractDTO;
 import com.example.lending_service.dto.LoanSummaryDTO;
 import com.example.lending_service.dto.PaymentDTO;
-import com.example.lending_service.model.LoanContract;
-import com.example.lending_service.model.PaymentSchedule;
 import com.example.lending_service.service.LoanContractService;
 import com.example.lending_service.service.PaymentScheduleService;
 import lombok.RequiredArgsConstructor;
@@ -24,15 +22,13 @@ public class LoanContractController {
     private final LoanContractService loanContractService;
     private final PaymentScheduleService paymentScheduleService;
 
-
     @PostMapping
     public ResponseEntity<LoanContractDTO> createLoan(
             @RequestBody @Valid CreateLoanRequest request,
             Authentication authentication
     ) {
-        String employeeEmail = authentication.getName(); // получаем email из токена
-        LoanContract contract = loanContractService.createLoan(request, employeeEmail);
-        return ResponseEntity.ok(toDTO(contract));
+        String employeeEmail = authentication.getName();
+        return ResponseEntity.ok(loanContractService.createLoan(request, employeeEmail));
     }
 
     @GetMapping("/{id}")
@@ -63,18 +59,4 @@ public class LoanContractController {
     ) {
         return ResponseEntity.ok(paymentScheduleService.getPaymentsByLoanIdAndStatus(id, isPaid));
     }
-
-    private LoanContractDTO toDTO(LoanContract contract) {
-        return new LoanContractDTO(
-                contract.getContractId(),
-                contract.getClient().getFullName(),
-                contract.getEmployee().getFullName(),
-                contract.getLoanAmount(),
-                contract.getPaymentType().name(),
-                contract.getStatus(),
-                contract.getStartDate(),
-                contract.getEndDate()
-        );
-    }
-
 }

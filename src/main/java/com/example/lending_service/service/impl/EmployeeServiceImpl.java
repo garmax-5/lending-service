@@ -18,16 +18,6 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     private final EmployeeRepository employeeRepository;
 
-//    @Override
-//    public Employee getEmployeeById(Long id) {
-//        return employeeRepository.findById(id)
-//                .orElseThrow(() -> new RuntimeException("Employee not found"));
-//    }
-//
-//    @Override
-//    public List<Employee> getAllEmployees() {
-//        return employeeRepository.findAll();
-//    }
     @Override
     public EmployeeDTO getEmployeeById(Long id) {
         return toDTO(employeeRepository.findById(id)
@@ -36,7 +26,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public List<EmployeeDTO> getAllEmployees() {
-        return employeeRepository.findAll()
+        return employeeRepository.findAllByOrderByFullNameAsc()
                 .stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
@@ -44,11 +34,11 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public List<EmployeeSearchDTO> searchByFullName(String search) {
-        return employeeRepository.findByFullNameContainingIgnoreCase(search).stream()
-                .map(e -> new EmployeeSearchDTO(e.getEmployeeId(), e.getFullName()))
+        return employeeRepository.findByFullNameContainingIgnoreCase(search)
+                .stream()
+                .map(this::toSearchDTO)
                 .collect(Collectors.toList());
     }
-
 
     private EmployeeDTO toDTO(Employee employee) {
         return new EmployeeDTO(
@@ -57,6 +47,10 @@ public class EmployeeServiceImpl implements EmployeeService {
                 employee.getEmail(),
                 employee.getRole().getRoleName()
         );
+    }
+
+    private EmployeeSearchDTO toSearchDTO(Employee employee) {
+        return new EmployeeSearchDTO(employee.getEmployeeId(), employee.getFullName());
     }
 }
 

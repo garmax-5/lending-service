@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping("/view")
 public class AuthPageController {
 
-    @GetMapping("/")
+    @GetMapping({"", "/"})
     public String showLoginForm() {
         return "login";
     }

@@ -17,16 +17,6 @@ public class EmployeeController {
 
     private final EmployeeService employeeService;
 
-//    @GetMapping("/{id}")
-//    public ResponseEntity<Employee> getEmployeeById(@PathVariable Long id) {
-//        return ResponseEntity.ok(employeeService.getEmployeeById(id));
-//    }
-//
-//    @GetMapping
-//    public ResponseEntity<List<Employee>> getAllEmployees() {
-//        return ResponseEntity.ok(employeeService.getAllEmployees());
-//    }
-
     @GetMapping("/{id}")
     public ResponseEntity<EmployeeDTO> getEmployeeById(@PathVariable Long id) {
         return ResponseEntity.ok(employeeService.getEmployeeById(id));
@@ -39,9 +29,8 @@ public class EmployeeController {
 
     @GetMapping("/search")
     public ResponseEntity<List<EmployeeSearchDTO>> search(@RequestParam String search) {
-        List<EmployeeSearchDTO> results = employeeService.searchByFullName(search);
-        return ResponseEntity.ok(results);
+        return ResponseEntity.ok(employeeService.searchByFullName(search));
     }
-
 }
+
 

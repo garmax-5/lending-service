@@ -2,7 +2,6 @@ package com.example.lending_service.controller;
 
 
 import com.example.lending_service.dto.ClientSearchDTO;
-import com.example.lending_service.model.Client;
 import com.example.lending_service.dto.ClientDTO;
 import com.example.lending_service.service.ClientService;
 import lombok.RequiredArgsConstructor;
@@ -18,15 +17,6 @@ public class ClientController {
 
     private final ClientService clientService;
 
-//    @GetMapping("/{id}")
-//    public ResponseEntity<Client> getClientById(@PathVariable Long id) {
-//        return ResponseEntity.ok(clientService.getClientById(id));
-//    }
-//
-//    @GetMapping
-//    public ResponseEntity<List<Client>> getAllClients() {
-//        return ResponseEntity.ok(clientService.getAllClients());
-//    }
     @GetMapping("/{id}")
     public ResponseEntity<ClientDTO> getClientById(@PathVariable Long id) {
         return ResponseEntity.ok(clientService.getClientById(id));
@@ -38,9 +28,14 @@ public class ClientController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<ClientSearchDTO>> search(@RequestParam String search) {
-        List<ClientSearchDTO> results = clientService.searchByFullName(search);
-        return ResponseEntity.ok(results);
+    public ResponseEntity<List<ClientSearchDTO>> search(@RequestParam(required = false) String search) {
+        if (search == null || search.trim().isEmpty()) {
+            return ResponseEntity.ok(clientService.getAllClientsForSearch());
+        }
+        return ResponseEntity.ok(clientService.searchByFullName(search));
     }
 }
+
+
+
 

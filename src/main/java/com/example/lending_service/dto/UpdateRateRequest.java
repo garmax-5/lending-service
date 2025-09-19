@@ -1,12 +1,16 @@
 package com.example.lending_service.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class UpdateRateRequest {
 
     @NotNull(message = "New rate is required")
@@ -16,7 +20,4 @@ public class UpdateRateRequest {
     @NotNull(message = "Start date is required")
     @FutureOrPresent(message = "Start date must be today or in the future")
     private LocalDate startDate;
-
-//    @NotNull(message = "Employee ID is required")
-//    private Long employeeId;
 }

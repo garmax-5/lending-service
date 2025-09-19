@@ -5,7 +5,8 @@ import javax.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -13,6 +14,7 @@ import java.time.LocalDateTime;
 public class LoanActionsLog {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "log_id")
     private Long logId;
 
     @ManyToOne
@@ -23,8 +25,13 @@ public class LoanActionsLog {
     @JoinColumn(name = "employee_id")
     private Employee employee;
 
+    @Column(name = "action_type")
     private String actionType;
+
+    @Column(name = "action_time")
     private LocalDateTime actionTime;
+
+    @Column(name = "description")
     private String description;
 
     @PrePersist
@@ -33,6 +40,5 @@ public class LoanActionsLog {
             actionTime = LocalDateTime.now();
         }
     }
-
 }
 

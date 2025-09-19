@@ -6,7 +6,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -14,13 +15,17 @@ import java.time.LocalDate;
 public class InterestRateHistory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "rate_id")
     private Long rateId;
 
     @ManyToOne
     @JoinColumn(name = "contract_id")
     private LoanContract contract;
 
+    @Column(name = "rate")
     private BigDecimal rate;
+
+    @Column(name = "start_date")
     private LocalDate startDate;
 
     @ManyToOne

@@ -6,7 +6,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -14,16 +15,28 @@ import java.time.LocalDate;
 public class PaymentSchedule {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "payment_id")
     private Long paymentId;
 
     @ManyToOne
     @JoinColumn(name = "contract_id")
     private LoanContract contract;
 
+    @Column(name = "payment_date")
     private LocalDate paymentDate;
+
+    @Column(name = "principal_amount")
     private BigDecimal principalAmount;
+
+    @Column(name = "interest_amount")
     private BigDecimal interestAmount;
+
+    @Column(name = "total_payment")
     private BigDecimal totalPayment;
+
+    @Column(name = "rate_applied")
     private BigDecimal rateApplied;
-    private boolean isPaid;
+
+    @Column(name = "is_paid")
+    private Boolean isPaid;
 }

@@ -8,5 +8,7 @@ import java.util.List;
 
 @Repository
 public interface LoanActionsLogRepository extends JpaRepository<LoanActionsLog, Long> {
-    List<LoanActionsLog> findByContractContractId(Long contractId);
+    List<LoanActionsLog> findByContractContractIdOrderByActionTimeDesc(Long contractId);
 }
+
+

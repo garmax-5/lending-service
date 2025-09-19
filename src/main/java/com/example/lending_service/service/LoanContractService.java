@@ -7,15 +7,9 @@ import com.example.lending_service.model.LoanContract;
 import java.util.List;
 
 public interface LoanContractService {
-
-//    LoanContract createLoan(CreateLoanRequest request);
-    LoanContract createLoan(CreateLoanRequest request, String employeeEmail);
-
+    LoanContractDTO createLoan(CreateLoanRequest request, String employeeEmail);
     LoanContractDTO getLoan(Long id);
-
     List<LoanContractDTO> getAllLoans();
-
     void calculateSchedule(Long id);
-
     LoanSummaryDTO getLoanSummary(Long loanId);
 }

@@ -40,7 +40,7 @@
         input[type="password"] {
             width: 100%;
             padding: 10px 12px;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             border: 1px solid #ccc;
             border-radius: 8px;
             box-sizing: border-box;
@@ -50,6 +50,20 @@
         input:focus {
             border-color: #6a5acd;
             outline: none;
+        }
+
+        .error-message {
+            color: red;
+            text-align: center;
+            margin: 10px 0;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 10px 0;
+            color: #6a5acd;
+            font-weight: bold;
         }
 
         button {
@@ -68,10 +82,9 @@
             background: #5a4bb7;
         }
 
-        #error {
-            color: red;
-            text-align: center;
-            margin-top: 10px;
+        button:disabled {
+            background: #999;
+            cursor: not-allowed;
         }
     </style>
 </head>
@@ -84,35 +97,60 @@
         <input type="email" id="email" name="email" required>
 
         <label for="password">Пароль:</label>
-        <input type="password" id="password" name="password" required>
+        <input type="password" id="password" name="password" required minlength="6">
 
         <button type="submit">Войти</button>
     </form>
 
-    <p id="error"></p>
+    <div class="loading" id="loading">Проверка данных...</div>
+    <div class="error-message" id="error"></div>
 </div>
 
 <script>
     document.getElementById("loginForm").addEventListener("submit", async function (e) {
         e.preventDefault();
+        const errorEl = document.getElementById("error");
+        const loadingEl = document.getElementById("loading");
+        errorEl.innerText = "";
 
-        const email = document.getElementById("email").value;
-        const password = document.getElementById("password").value;
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value.trim();
+
+        // Простая фронтенд-валидация
+        if (!email.match(/^\S+@\S+\.\S+$/)) {
+            errorEl.innerText = "Введите корректный email";
+            return;
+        }
+        if (password.length < 6) {
+            errorEl.innerText = "Пароль должен быть не менее 6 символов";
+            return;
+        }
+
+        loadingEl.style.display = "block";
 
         try {
             const response = await fetch("/api/auth/login", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json"
+                },
                 body: JSON.stringify({ email, password })
             });
+
+            loadingEl.style.display = "none";
 
             if (!response.ok) throw new Error("Неверные учетные данные");
 
             const data = await response.json();
             sessionStorage.setItem("jwt", data.token);
+
+            // Очистка формы
+            document.getElementById("loginForm").reset();
+
             window.location.href = "/view/dashboard";
         } catch (err) {
-            document.getElementById("error").innerText = err.message;
+            loadingEl.style.display = "none";
+            errorEl.innerText = err.message;
         }
     });
 </script>

@@ -6,7 +6,8 @@ import javax.persistence.*;
 
 
 @Entity
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -14,13 +15,17 @@ import javax.persistence.*;
 public class Employee {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "employee_id")
     private Long employeeId;
 
+    @Column(name = "full_name")
     private String fullName;
 
+    @Column(name = "email")
     private String email;
 
     @JsonIgnore
+    @Column(name = "password")
     private String password;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -31,5 +36,4 @@ public class Employee {
     public Employee(Long id) {
         this.employeeId = id;
     }
-
 }

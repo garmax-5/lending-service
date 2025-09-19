@@ -4,7 +4,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-
         clearValidationErrors();
 
         const formData = new FormData(form);
@@ -20,6 +19,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const validationErrors = validateForm(payload);
         if (validationErrors.length > 0) {
             showValidationErrors(validationErrors);
+            // ставим фокус на первое поле с ошибкой
+            const firstField = document.getElementById(validationErrors[0].field);
+            if (firstField) firstField.focus();
             return;
         }
 
@@ -38,14 +40,17 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response.ok) {
                 successMessage.style.display = 'block';
                 form.reset();
+                setTimeout(() => {
+                    successMessage.style.display = 'none';
+                }, 3000); // скрываем через 3 секунды
             } else {
                 const errorResponse = await response.json();
-                const message = errorResponse.message || 'Неизвестная ошибка';
-                // Подсветим clientFullName, если ошибка про клиента
-                if (message.includes("Клиент")) {
-                    showValidationErrors([{ field: 'clientFullName', message }]);
+                if (errorResponse.field && errorResponse.message) {
+                    showValidationErrors([{ field: errorResponse.field, message: errorResponse.message }]);
+                    const fieldElem = document.getElementById(errorResponse.field);
+                    if (fieldElem) fieldElem.focus();
                 } else {
-                    alert('Ошибка при создании кредита:\n' + message);
+                    alert('Ошибка при создании кредита:\n' + (errorResponse.message || 'Неизвестная ошибка'));
                 }
             }
         } catch (err) {

@@ -1,20 +1,14 @@
 package com.example.lending_service.service.impl;
 
-import com.example.lending_service.model.Employee;
-import com.example.lending_service.model.InterestRateHistory;
-import com.example.lending_service.model.LoanActionsLog;
-import com.example.lending_service.model.LoanContract;
-import com.example.lending_service.model.PaymentSchedule;
-import com.example.lending_service.model.PaymentType;
-import com.example.lending_service.repository.EmployeeRepository;
-import com.example.lending_service.repository.InterestRateHistoryRepository;
-import com.example.lending_service.repository.LoanActionsLogRepository;
-import com.example.lending_service.repository.LoanContractRepository;
-import com.example.lending_service.repository.PaymentScheduleRepository;
+import com.example.lending_service.dto.InterestRateHistoryDTO;
+import com.example.lending_service.model.*;
+import com.example.lending_service.repository.*;
 import com.example.lending_service.service.InterestRateHistoryService;
 import com.example.lending_service.util.Calculator;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -22,6 +16,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class InterestRateHistoryServiceImpl implements InterestRateHistoryService {
@@ -33,6 +28,7 @@ public class InterestRateHistoryServiceImpl implements InterestRateHistoryServic
     private final PaymentScheduleRepository paymentScheduleRepository;
 
     @Override
+    @Transactional
     public void updateInterestRate(Long loanId, BigDecimal newRate, LocalDate startDate, Long employeeId) {
         LoanContract contract = loanContractRepository.findById(loanId)
                 .orElseThrow(() -> new RuntimeException("Loan contract not found"));
@@ -40,7 +36,6 @@ public class InterestRateHistoryServiceImpl implements InterestRateHistoryServic
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new RuntimeException("Employee not found"));
 
-        // Сохраняем новую запись в истории ставок
         InterestRateHistory rateHistory = InterestRateHistory.builder()
                 .contract(contract)
                 .rate(newRate)
@@ -49,65 +44,67 @@ public class InterestRateHistoryServiceImpl implements InterestRateHistoryServic
                 .build();
         interestRateHistoryRepository.save(rateHistory);
 
-        // Получаем все платежи
-        List<PaymentSchedule> allPayments = paymentScheduleRepository.findByContractContractId(loanId);
+        // Используем существующий метод
+        List<PaymentSchedule> allPayments = paymentScheduleRepository
+                .findByContractContractIdOrderByPaymentDateAsc(loanId);
 
-        // Считаем погашенную часть основного долга
-        BigDecimal totalPrincipalPaid = allPayments.stream()
-                .filter(PaymentSchedule::isPaid)
+        List<PaymentSchedule> toDelete = allPayments.stream()
+                .filter(p -> !p.getIsPaid() && !p.getPaymentDate().isBefore(startDate))
+                .collect(Collectors.toList());
+        paymentScheduleRepository.deleteAll(toDelete);
+
+        BigDecimal remainingPrincipal = toDelete.stream()
                 .map(PaymentSchedule::getPrincipalAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // Удаляем ТОЛЬКО неоплаченные платежи с датой >= startDate
-        List<PaymentSchedule> toDelete = allPayments.stream()
-                .filter(p -> !p.isPaid() && !p.getPaymentDate().isBefore(startDate))
-                .collect(Collectors.toList());
+        log.info("Rate changed for contract {}: newRate={}, from {}, remainingPrincipal={}",
+                loanId, newRate, startDate, remainingPrincipal);
 
-        paymentScheduleRepository.deleteAll(toDelete);
-
-        // Остаток основного долга
-        BigDecimal remainingPrincipal = contract.getLoanAmount().subtract(totalPrincipalPaid);
         if (remainingPrincipal.compareTo(BigDecimal.ZERO) <= 0) return;
 
-        // Определяем количество месяцев по оставшимся датам
-        int remainingMonths = toDelete.size();
-        if (remainingMonths == 0) {
-            LocalDate cursor = startDate;
-            LocalDate end = contract.getEndDate();
-            while (cursor.isBefore(end)) {
-                remainingMonths++;
-                cursor = cursor.plusMonths(1);
-            }
-        }
+        int remainingMonths = Calculator.calculateRemainingMonths(startDate, contract.getEndDate());
+        log.info("Recalculating schedule for {} months", remainingMonths);
 
-        // Перерасчёт графика с новой ставкой
         List<PaymentSchedule> newPayments = (contract.getPaymentType() == PaymentType.ANNUITY)
                 ? Calculator.calculateAnnuitySchedule(contract, remainingPrincipal, newRate, remainingMonths, startDate)
                 : Calculator.calculateDifferentiatedSchedule(contract, remainingPrincipal, newRate, remainingMonths, startDate);
 
         paymentScheduleRepository.saveAll(newPayments);
 
-        // Логирование действия
-        LoanActionsLog log = LoanActionsLog.builder()
+        loanActionsLogRepository.save(LoanActionsLog.builder()
                 .contract(contract)
                 .employee(employee)
                 .actionType("RATE_CHANGE")
-                .description("Ставка изменена на " + newRate + "% с даты " + startDate)
-                .build();
-        loanActionsLogRepository.save(log);
+                .description("Ставка изменена на " + newRate + "% с " + startDate)
+                .build());
+
+        log.info("Schedule successfully recalculated: {} new payments created", newPayments.size());
     }
 
-
     @Override
-    public List<InterestRateHistory> getRateHistoryByLoanId(Long loanId) {
-        return interestRateHistoryRepository.findByContractContractId(loanId);
+    public List<InterestRateHistoryDTO> getRateHistoryByLoanId(Long loanId) {
+        return interestRateHistoryRepository.findByContractContractIdOrderByStartDateAsc(loanId)
+                .stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
     public BigDecimal getCurrentRateForContract(Long contractId) {
-        return interestRateHistoryRepository.findByContractContractId(contractId).stream()
+        return interestRateHistoryRepository.findByContractContractIdOrderByStartDateAsc(contractId).stream()
                 .max(Comparator.comparing(InterestRateHistory::getStartDate))
                 .orElseThrow(() -> new RuntimeException("No rate history for contract: " + contractId))
                 .getRate();
     }
+
+    private InterestRateHistoryDTO toDTO(InterestRateHistory entity) {
+        return new InterestRateHistoryDTO(
+                entity.getRateId(),
+                entity.getRate(),
+                entity.getStartDate(),
+                entity.getEmployee() != null ? entity.getEmployee().getFullName() : null
+        );
+    }
 }
+
+

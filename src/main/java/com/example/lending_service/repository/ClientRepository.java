@@ -11,5 +11,7 @@ import java.util.Optional;
 public interface ClientRepository extends JpaRepository<Client, Long> {
     List<Client> findByFullNameContainingIgnoreCase(String fullName);
     Optional<Client> findByFullNameIgnoreCase(String fullName);
-
+    List<Client> findAllByOrderByFullNameAsc();
 }
+
+

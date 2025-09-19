@@ -1,8 +1,8 @@
 package com.example.lending_service.controller;
 
+import com.example.lending_service.dto.InterestRateHistoryDTO;
 import com.example.lending_service.dto.UpdateRateRequest;
 import com.example.lending_service.model.Employee;
-import com.example.lending_service.model.InterestRateHistory;
 import com.example.lending_service.repository.EmployeeRepository;
 import com.example.lending_service.service.InterestRateHistoryService;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +22,7 @@ public class InterestRateHistoryController {
     private final EmployeeRepository employeeRepository;
 
     @GetMapping("/loan/{loanId}")
-    public ResponseEntity<List<InterestRateHistory>> getRateHistoryByLoan(@PathVariable Long loanId) {
+    public ResponseEntity<List<InterestRateHistoryDTO>> getRateHistoryByLoan(@PathVariable Long loanId) {
         return ResponseEntity.ok(interestRateHistoryService.getRateHistoryByLoanId(loanId));
     }
 
@@ -46,3 +46,4 @@ public class InterestRateHistoryController {
         return ResponseEntity.ok("Ставка успешно обновлена.");
     }
 }
+

@@ -87,6 +87,10 @@ public class Calculator {
         return schedule;
     }
 
+    public static int calculateRemainingMonths(LocalDate from, LocalDate to) {
+        return (int) java.time.temporal.ChronoUnit.MONTHS.between(from.withDayOfMonth(1), to.withDayOfMonth(1)) + 1;
+    }
+
     private PaymentSchedule createPayment(
             LoanContract contract,
             LocalDate date,

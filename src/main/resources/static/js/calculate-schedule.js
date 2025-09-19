@@ -10,41 +10,77 @@ document.addEventListener('DOMContentLoaded', () => {
         calcForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            const contractId = document.getElementById('contractId').value;
+            const contractIdInput = document.getElementById('contractId');
+            const contractId = Number(contractIdInput.value.trim());
+            const errorDiv = document.getElementById('contractIdError');
+
+            // Очистка предыдущих ошибок
+            contractIdInput.classList.remove('input-error');
+            errorDiv.textContent = '';
+            calcResultContainer.style.display = 'none';
+            calcResultTableBody.innerHTML = '';
+
+            if (!contractId || isNaN(contractId)) {
+                contractIdInput.classList.add('input-error');
+                errorDiv.textContent = "Введите корректный числовой ID договора";
+                return;
+            }
 
             try {
-                // 1. Перерасчет графика
+                // Перерасчет графика
                 const res = await fetch(`/api/loans/${contractId}/calculate-schedule`, {
                     method: 'POST',
                     headers: {
-                        'Authorization': `Bearer ${token}`
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
                     }
                 });
 
                 if (!res.ok) {
-                    const error = await res.text();
-                    throw new Error("Ошибка при расчете: " + error);
+                    let message = "Произошла ошибка";
+                    try {
+                        const errorData = await res.json();
+                        if (errorData.message === "Loan not found") {
+                            message = "Договор с таким ID не найден";
+                        } else {
+                            message = errorData.message || message;
+                        }
+                    } catch (e) {
+                        message = "Ошибка при расчете: " + res.statusText;
+                    }
+                    contractIdInput.classList.add('input-error');
+                    errorDiv.textContent = message;
+                    return;
                 }
 
+                // Показ сообщения об успехе
                 calcSuccess.style.display = 'block';
+                setTimeout(() => {
+                    calcSuccess.style.display = 'none';
+                    calcForm.reset();
+                }, 3000);
 
-                // 2. Получение обновленного графика
+                // Получение графика
                 const paymentsRes = await fetch(`/api/schedules/loan/${contractId}`, {
                     headers: {
-                        'Authorization': `Bearer ${token}`
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
                     }
                 });
 
                 if (!paymentsRes.ok) {
                     const errorText = await paymentsRes.text();
-                    throw new Error("Ошибка загрузки графика: " + errorText);
+                    contractIdInput.classList.add('input-error');
+                    errorDiv.textContent = "Ошибка загрузки графика: " + errorText;
+                    return;
                 }
 
                 const payments = await paymentsRes.json();
                 renderPayments(payments);
 
             } catch (error) {
-                alert("Ошибка: " + error.message);
+                contractIdInput.classList.add('input-error');
+                errorDiv.textContent = "Ошибка: " + error.message;
             }
         });
     }
@@ -65,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>${p.principalAmount.toFixed(2)}</td>
                 <td>${p.interestAmount.toFixed(2)}</td>
                 <td>${p.totalPayment.toFixed(2)}</td>
-                <td>${p.paid ? 'Да' : 'Нет'}</td>
+                <td>${p.isPaid ? 'Да' : 'Нет'}</td>
             `;
             calcResultTableBody.appendChild(row);
         }

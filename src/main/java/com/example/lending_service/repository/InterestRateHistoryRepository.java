@@ -8,5 +8,5 @@ import java.util.List;
 
 @Repository
 public interface InterestRateHistoryRepository extends JpaRepository<InterestRateHistory, Long> {
-    List<InterestRateHistory> findByContractContractId(Long contractId);
+    List<InterestRateHistory> findByContractContractIdOrderByStartDateAsc(Long contractId);
 }
